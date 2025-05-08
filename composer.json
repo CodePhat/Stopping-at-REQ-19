@@ -1,0 +1,14 @@
+{
+    "name": "vendor/autoload",
+    "description": "Dependancy",
+    "autoload": {
+        "psr-4": {
+            "Vendor\\Autoload\\": "src/"
+        }
+    },
+    "require": {
+        "phpmailer/phpmailer": "^6.9",
+        "spomky-labs/otphp": "^11.3",
+        "endroid/qr-code": "^6.0"
+    }
+}
