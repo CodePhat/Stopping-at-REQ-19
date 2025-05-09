@@ -72,7 +72,7 @@ $layoutClass = $note_layout === 'grid' ? 'row row-cols-1 row-cols-sm-2 row-cols-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Welcome, <?= htmlspecialchars($username) ?>!</h2>
         <div>
-            <a href="?logged_out=true" class="btn btn-outline-secondary">Log Out</a>
+        <a href="logout.php" class="btn btn-outline-danger">Logout</a>
         </div>
     </div>
 
@@ -101,46 +101,157 @@ $layoutClass = $note_layout === 'grid' ? 'row row-cols-1 row-cols-sm-2 row-cols-
 
     <!-- New Note -->
     <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>New Note</span>
-            <input type="text" id="searchBox" class="form-control w-25" placeholder="Search notes...">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">New Note</h5>
+    <input
+      type="text"
+      id="searchBox"
+      class="form-control w-25"
+      placeholder="Search notes..."
+      aria-label="Search notes"
+    />
+  </div>
+  <div class="card-body">
+    <form id="note-form" onsubmit="event.preventDefault(); addNote();">
+      <div class="mb-3">
+        <label for="note-title" class="form-label">Title</label>
+        <input type="text" id="note-title" class="form-control" placeholder="Enter title" required />
+      </div>
+
+      <div class="mb-3">
+        <label for="note-labels" class="form-label">Labels</label>
+        <select id="note-labels" class="form-select" multiple aria-label="Select labels">
+          <!-- Options should be populated dynamically -->
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="note-content" class="form-label">Content</label>
+        <textarea
+          id="note-content"
+          class="form-control"
+          rows="4"
+          placeholder="Write your note..."
+          required
+        ></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label for="note-images" class="form-label">Attach Images</label>
+        <input type="file" id="note-images" class="form-control" multiple accept="image/*" />
+      </div>
+
+      <div id="autosave-status" class="form-text text-muted mb-3" aria-live="polite"></div>
+
+      <button type="submit" class="btn btn-success">Add Note</button>
+    </form>
+  </div>
+</div>
+
+        <!-- Label Management Modal -->
+<div class="modal fade" id="labelModal" tabindex="-1" aria-labelledby="labelModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Manage Labels</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group" id="labelList"></ul>
+        <div class="input-group mt-3">
+          <input type="text" id="newLabelName" class="form-control" placeholder="New label name">
+          <button class="btn btn-primary" id="addLabelBtn">Add</button>
         </div>
-        <div class="card-body">
-            <input type="text" id="note-title" class="form-control mb-2" placeholder="Title">
-            <textarea id="note-content" class="form-control mb-2" rows="4" placeholder="Write your note..."></textarea>
-            <input type="file" id="note-images" multiple class="form-control mb-2">
-            <div id="autosave-status" class="text-muted" style="font-size: 0.9rem;"></div>
-            <button class="btn btn-success mb-3" onclick="addNote()">Add Note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Button to open label modal -->
+<div class="mb-3">
+  <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#labelModal">Manage Labels</button>
+</div>
+
+    <!-- Filter Notes by Label -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Filter Notes by Label:
+            <select id="labelFilter" class="form-select w-auto d-inline-block">
+                <option value="">-- All --</option>
+            </select>
         </div>
     </div>
 
-    <div class="<?= $layoutClass ?>" id="notes-container">
-    <div class="row">
-        <?php foreach ($notes as $note): ?>
-            <div class="col-md-4 mb-4">
-                <div class="card position-relative note-card <?= $note['pinned_at'] ? 'border-warning' : '' ?>" id="note-<?= $note['note_id'] ?>" style="background-color: <?= htmlspecialchars($note_color) ?>; font-size: <?= $fontSizeCss ?>;">
-                    <div class="card-body">
-                        <input type="text" class="form-control editable-title mb-2" data-id="<?= $note['note_id'] ?>" value="<?= htmlspecialchars($note['title']) ?>">
-                        <textarea class="form-control editable-content mb-2" data-id="<?= $note['note_id'] ?>" rows="3"><?= htmlspecialchars($note['content']) ?></textarea>
-                        
-                        <?php if (!empty($note['images'])): ?>
-                            <?php foreach (explode(',', $note['images']) as $img): ?>
-                                <img src="<?= htmlspecialchars($img) ?>" class="img-fluid my-2" style="max-height: 200px; object-fit: contain;" />
-                            <?php endforeach; ?>
-                        <?php endif; ?>
 
-                        <div class="d-flex justify-content-between">
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteNote(<?= $note['note_id'] ?>)">Delete</button>
-                            <button class="btn btn-sm btn-outline-warning" onclick="togglePin(<?= $note['note_id'] ?>)">
+    <div class="<?= $layoutClass ?>" id="notes-container">
+    <?php foreach ($notes as $note): ?>
+        <div class="col mb-4">
+            <div class="card position-relative note-card <?= $note['pinned_at'] ? 'border-warning' : '' ?>"
+                id="note-<?= $note['note_id'] ?>"
+                style="background-color: <?= htmlspecialchars($note_color) ?>; font-size: <?= $fontSizeCss ?>;">
+                <div class="card-body">
+                    <!-- Editable Title -->
+                    <div class="mb-2">
+                        <label for="title-<?= $note['note_id'] ?>" class="form-label visually-hidden">Title</label>
+                        <input type="text"
+                               id="title-<?= $note['note_id'] ?>"
+                               class="form-control editable-title"
+                               data-id="<?= $note['note_id'] ?>"
+                               value="<?= htmlspecialchars($note['title']) ?>"
+                               placeholder="Note title">
+                    </div>
+
+                    <!-- Editable Content -->
+                    <div class="mb-2">
+                        <label for="content-<?= $note['note_id'] ?>" class="form-label visually-hidden">Content</label>
+                        <textarea id="content-<?= $note['note_id'] ?>"
+                                  class="form-control editable-content"
+                                  data-id="<?= $note['note_id'] ?>"
+                                  rows="3"
+                                  placeholder="Write your note..."><?= htmlspecialchars($note['content']) ?></textarea>
+                    </div>
+
+                    <!-- Attached Images -->
+                    <?php if (!empty($note['images'])): ?>
+                        <div class="mb-2">
+                            <?php foreach (explode(',', $note['images']) as $img): ?>
+                                <img src="<?= htmlspecialchars($img) ?>"
+                                     class="img-fluid rounded border my-1"
+                                     style="max-height: 200px; object-fit: contain;"
+                                     alt="Attached image for note <?= $note['note_id'] ?>" />
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Labels & Actions -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="flex-grow-1 me-2 mb-2">
+                            <select class="form-select form-select-sm note-label-select"
+                                    data-note-id="<?= $note['note_id'] ?>" multiple>
+                                <?php foreach ($labels as $label): ?>
+                                    <option value="<?= $label['label_id'] ?>"
+                                        <?= in_array($label['label_id'], array_column($note['labels'], 'label_id')) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($label['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="btn-group btn-group-sm mb-2">
+                            <button class="btn btn-outline-danger" onclick="deleteNote(<?= $note['note_id'] ?>)">
+                                Delete
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="togglePin(<?= $note['note_id'] ?>)">
                                 <?= $note['pinned_at'] ? 'Unpin' : 'Pin' ?>
                             </button>
                         </div>
                     </div>
+
                 </div>
             </div>
-        <?php endforeach; ?>
-    </div>
+        </div>
+    <?php endforeach; ?>
 </div>
+
 
 
 <style>
@@ -215,7 +326,7 @@ $('#searchBox').on('input', function () {
                     `;
                 }).join('');
 
-                $('#notes-container').html(notesHtml);
+                $('#notes-container').html(`<div class="row">${notesHtml}</div>`);
             } else {
                 alert("Search failed: " + (data.error || "Unknown error"));
             }
@@ -231,6 +342,7 @@ function addNote() {
     const title = $('#note-title').val().trim();
     const content = $('#note-content').val().trim();
     const images = $('#note-images')[0].files;
+    
 
     if (!title && !content && images.length === 0) {
         alert("Note is empty.");
@@ -259,9 +371,174 @@ function addNote() {
         }
     });
 }
+function loadLabels() {
+    $.get('get_labels.php', function(res) {
+        const data = typeof res === "object" ? res : JSON.parse(res);
+        if (data.success) {
+            const select = $('#labelFilter');
+            select.empty().append('<option value="">-- All --</option>');
+            data.labels.forEach(label => {
+                select.append(`<option value="${label.label_id}">${label.name}</option>`);
+            });
+        }
+    });
+}
+
+$('#labelFilter').on('change', function () {
+    const labelId = $(this).val();
+    if (!labelId) {
+        location.reload(); // Show all
+        return;
+    }
+
+    $.post('filter_notes_by_label.php', { label_id: labelId }, function (res) {
+        const data = typeof res === "object" ? res : JSON.parse(res);
+        if (data.success) {
+            const notesHtml = data.notes.map(note => {
+                const noteColor = note.note_color || '<?= $note_color ?>';
+                const fontSize = note.font_size || '<?= $fontSizeCss ?>';
+                const pinned = note.pinned_at ? 'Unpin' : 'Pin';
+                const borderClass = note.pinned_at ? 'border-warning' : '';
+                const imagesHtml = note.images
+                    ? note.images.split(',').map(img => `<img src="${img}" class="img-fluid my-2" />`).join('')
+                    : '';
+
+                return `
+                    <div class="col mb-4">
+                        <div class="card note-card ${borderClass}" style="background-color: ${noteColor}; font-size: ${fontSize};">
+                            <div class="card-body">
+                                <input type="text" class="form-control editable-title mb-2" data-id="${note.note_id}" value="${note.title}">
+                                <textarea class="form-control editable-content" data-id="${note.note_id}" rows="3">${note.content}</textarea>
+                                ${imagesHtml}
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteNote(${note.note_id})">Delete</button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="togglePin(${note.note_id})">${pinned}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            $('#notes-container').html(`<div class="<?= $layoutClass ?>">${notesHtml}</div>`);
+        }
+    });
+});
+
+// Initial call to populate the dropdown
+loadLabels();
+function refreshLabelList() {
+    $.get('get_labels.php', function (res) {
+        const data = typeof res === "object" ? res : JSON.parse(res);
+        const list = $('#labelList');
+        list.empty();
+        data.labels.forEach(label => {
+            list.append(`
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <input type="text" class="form-control form-control-sm me-2 flex-grow-1" value="${label.name}" data-id="${label.label_id}" onchange="renameLabel(${label.label_id}, this.value)">
+                    <button class="btn btn-sm btn-danger" onclick="deleteLabel(${label.label_id})">&times;</button>
+                </li>
+            `);
+        });
+        loadLabels(); // Refresh dropdown
+    });
+}
+
+function renameLabel(labelId, newName) {
+    $.post('rename_label.php', { label_id: labelId, name: newName }, function (res) {
+        const data = typeof res === "object" ? res : JSON.parse(res);
+        if (!data.success) alert(data.error || 'Failed to rename label');
+        loadLabels();
+    });
+}
+
+function deleteLabel(labelId) {
+    if (!confirm('Are you sure you want to delete this label?')) return;
+    $.post('delete_label.php', { label_id: labelId }, function (res) {
+        const data = typeof res === "object" ? res : JSON.parse(res);
+        if (!data.success) alert(data.error || 'Failed to delete label');
+        refreshLabelList();
+        loadLabels();
+    });
+}
+
+$('#addLabelBtn').on('click', function () {
+    const labelName = $('#newLabelName').val().trim();
+    if (!labelName) return alert('Label name required');
+    $.post('add_label.php', { name: labelName }, function (res) {
+        const data = typeof res === "object" ? res : JSON.parse(res);
+        if (!data.success) alert(data.error || 'Failed to add label');
+        $('#newLabelName').val('');
+        refreshLabelList();
+        loadLabels();
+    });
+});
+
+$('#labelModal').on('shown.bs.modal', refreshLabelList);
+
+function populateNoteLabelSelector() {
+    $.get('get_labels.php', function (res) {
+        const data = typeof res === "object" ? res : JSON.parse(res);
+        const select = $('#note-labels');
+        select.empty();
+        data.labels.forEach(label => {
+            select.append(`<option value="${label.label_id}">${label.name}</option>`);
+        });
+    });
+}
+populateNoteLabelSelector();
+
+$('.note-label-select').on('change', function () {
+    const noteId = $(this).data('note-id');
+    const selectedLabels = $(this).val(); // array of selected label IDs
+
+    $.ajax({
+        type: 'POST',
+        url: 'update_note_labels.php',
+        data: {
+            note_id: noteId,
+            labels: JSON.stringify(selectedLabels)
+        },
+        success: function (response) {
+            console.log('Labels updated:', response);
+        },
+        error: function () {
+            alert('Failed to update labels');
+        }
+    });
+});
 
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+<script>
+let autoSaveTimer;
+
+function autoSaveNote(noteId, fieldType, value) {
+    clearTimeout(autoSaveTimer);
+
+    autoSaveTimer = setTimeout(() => {
+        const title = $(`.editable-title[data-id="${noteId}"]`).val();
+        const content = $(`.editable-content[data-id="${noteId}"]`).val();
+
+        $.post('autosave_note.php', {
+            note_id: noteId,
+            title: title,
+            content: content
+        }, function(response) {
+            const data = typeof response === "object" ? response : JSON.parse(response);
+            if (data.success) {
+                $('#autosave-status').text("Auto-saved at " + new Date().toLocaleTimeString());
+            } else {
+                console.error(data.error || "Auto-save failed");
+            }
+        });
+    }, 1000); 
+}
+
+$(document).on('input', '.editable-title, .editable-content', function () {
+    const noteId = $(this).data('id');
+    const value = $(this).val();
+    autoSaveNote(noteId, $(this).hasClass('editable-title') ? 'title' : 'content', value);
+});
+</script>

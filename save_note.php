@@ -28,6 +28,13 @@ if (!empty($_FILES['images'])) {
     }
 }
 
+$labels = json_decode($_POST['labels'], true);
+// Insert into note_labels table after inserting the note
+foreach ($labels as $labelId) {
+    $stmt = $pdo->prepare("INSERT INTO note_labels (note_id, label_id) VALUES (?, ?)");
+    $stmt->execute([$note_id, $labelId]);
+}
+
 try {
     // Get user preferences
     $stmt = $pdo->prepare("SELECT preferences FROM users WHERE user_id = ?");
