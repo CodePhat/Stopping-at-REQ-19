@@ -1,17 +1,16 @@
 <?php
-session_start();
 require 'db_connection.php';
+session_start();
 
-$user_id = $_SESSION["user_id"] ?? 0;
-$label_id = $_POST['label_id'] ?? null;
-$new_name = trim($_POST['name'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $labelId = $_POST['label_id'];
+    $newName = trim($_POST['new_name']);
+    $userId = $_SESSION['user_id'];
 
-if (!$label_id || !$new_name) {
-    echo json_encode(['success' => false, 'error' => 'Missing data']);
-    exit;
+    $stmt = $pdo->prepare("UPDATE labels SET name = ? WHERE label_id = ? AND user_id = ?");
+    if ($stmt->execute([$newName, $labelId, $userId])) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Failed to update label']);
+    }
 }
-
-$stmt = $pdo->prepare("UPDATE labels SET name = ? WHERE label_id = ? AND user_id = ?");
-$success = $stmt->execute([$new_name, $label_id, $user_id]);
-
-echo json_encode(['success' => $success]);

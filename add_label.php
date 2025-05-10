@@ -2,15 +2,19 @@
 session_start();
 require 'db_connection.php';
 
-$user_id = $_SESSION["user_id"] ?? 0;
-$label_name = trim($_POST['name'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name']);
+    $user_id = $_SESSION['user_id'];
 
-if (!$label_name) {
-    echo json_encode(['success' => false, 'error' => 'Label name is required']);
-    exit;
+    if ($name) {
+        $stmt = $pdo->prepare("INSERT INTO labels (user_id, name) VALUES (?, ?)");
+        if ($stmt->execute([$user_id, $name])) {
+            $label_id = $pdo->lastInsertId();
+            echo json_encode(['success' => true, 'label' => ['label_id' => $label_id, 'name' => $name]]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Database error']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Name is required']);
+    }
 }
-
-$stmt = $pdo->prepare("INSERT INTO labels (user_id, name) VALUES (?, ?)");
-$success = $stmt->execute([$user_id, $label_name]);
-
-echo json_encode(['success' => $success]);
