@@ -14,7 +14,7 @@ $query = $_POST['query'] ?? '';
 
 try {
     $stmt = $pdo->prepare("
-        SELECT note_id, title, content, images, pinned_at, updated_at, note_color, font_size
+        SELECT note_id, title, content, images, pinned_at, updated_at
         FROM notes
         WHERE user_id = :id AND (title LIKE :query OR content LIKE :query)
         ORDER BY pinned_at DESC, updated_at DESC
@@ -31,8 +31,6 @@ try {
             'content' => $note['content'],
             'images' => $note['images'] ?? '',
             'pinned_at' => $note['pinned_at'],
-            'note_color' => $note['note_color'] ?? '#ffffff',
-            'font_size' => $note['font_size'] ?? '1rem'
         ];
     }, $notes);
 
@@ -40,6 +38,7 @@ try {
         "success" => true,
         "notes" => $processedNotes
     ]);
+
 } catch (PDOException $e) {
     echo json_encode(["success" => false, "error" => "Database error."]);
     // Optional: Log $e->getMessage() to server log for debugging
