@@ -1,9 +1,9 @@
-  -- phpMyAdmin SQL Dump
+-- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 07, 2025 at 07:19 PM
+-- Generation Time: May 12, 2025 at 09:39 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -44,8 +44,16 @@ CREATE TABLE `email_verification_tokens` (
 CREATE TABLE `labels` (
   `label_id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
-  `name` varchar(100) DEFAULT NULL
+  `name` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `labels`
+--
+
+INSERT INTO `labels` (`label_id`, `user_id`, `name`) VALUES
+(36, 4, 'a'),
+(37, 4, 'b');
 
 -- --------------------------------------------------------
 
@@ -64,6 +72,17 @@ CREATE TABLE `notes` (
   `images` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `notes`
+--
+
+INSERT INTO `notes` (`note_id`, `user_id`, `title`, `content`, `created_at`, `updated_at`, `pinned_at`, `images`) VALUES
+(49, 4, 'a', 'b', '2025-05-12 20:46:25', '2025-05-13 02:08:05', '2025-05-13 02:08:05', ''),
+(50, 4, 'c', 'd', '2025-05-12 23:05:12', '2025-05-13 02:07:59', NULL, ''),
+(51, 4, 'e', 'f', '2025-05-12 23:05:16', '2025-05-12 23:32:18', NULL, ''),
+(52, 4, 'g', 'h', '2025-05-13 00:21:03', '2025-05-13 02:08:00', NULL, 'uploads/68222dff4b67b_495539424_997617259107355_3749892897584036262_n.jpg'),
+(53, 4, 'minh', 'dop', '2025-05-13 01:11:14', '2025-05-13 02:01:09', NULL, '');
+
 -- --------------------------------------------------------
 
 --
@@ -72,8 +91,18 @@ CREATE TABLE `notes` (
 
 CREATE TABLE `note_labels` (
   `note_id` int(11) NOT NULL,
-  `label_id` int(11) NOT NULL
+  `label_id` int(11) NOT NULL,
+  `name` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `note_labels`
+--
+
+INSERT INTO `note_labels` (`note_id`, `label_id`, `name`) VALUES
+(49, 36, NULL),
+(50, 36, NULL),
+(52, 37, NULL);
 
 -- --------------------------------------------------------
 
@@ -100,7 +129,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `email`, `password`, `created_at`, `updated_at`, `is_verified`, `totp_secret`, `two_factor_enabled`, `avatar`, `preferences`) VALUES
-(4, 'Phat', 'lephatvip6@gmail.com', '$2y$10$P4TxNX17su2dyLQxclZjmuxLsHEN4t7z8vQ8juMbHtJhwFzkLBMu.', '2025-05-07 22:14:37', '2025-05-07 23:28:12', 1, NULL, 0, 'uploads/avatars/avatar_681b8a1c58d92.png', '{\"theme\":\"dark\",\"note_layout\":\"grid\",\"font_size\":\"medium\",\"note_color\":\"#ffffff\"}');
+(4, 'Phat', 'lephatvip6@gmail.com', '$2y$10$P4TxNX17su2dyLQxclZjmuxLsHEN4t7z8vQ8juMbHtJhwFzkLBMu.', '2025-05-07 22:14:37', '2025-05-13 00:47:26', 1, NULL, 0, 'uploads/avatars/avatar_681b8a1c58d92.png', '{\"theme\":\"light\",\"note_layout\":\"grid\",\"font_size\":\"medium\",\"note_color\":\"#ffffff\"}');
 
 --
 -- Indexes for dumped tables
@@ -119,6 +148,7 @@ ALTER TABLE `email_verification_tokens`
 --
 ALTER TABLE `labels`
   ADD PRIMARY KEY (`label_id`),
+  ADD UNIQUE KEY `name` (`name`),
   ADD KEY `user_id` (`user_id`);
 
 --
@@ -133,7 +163,8 @@ ALTER TABLE `notes`
 --
 ALTER TABLE `note_labels`
   ADD PRIMARY KEY (`note_id`,`label_id`),
-  ADD KEY `label_id` (`label_id`);
+  ADD KEY `label_id` (`label_id`),
+  ADD KEY `fk_note_labels_name` (`name`);
 
 --
 -- Indexes for table `users`
@@ -157,13 +188,13 @@ ALTER TABLE `email_verification_tokens`
 -- AUTO_INCREMENT for table `labels`
 --
 ALTER TABLE `labels`
-  MODIFY `label_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `label_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `notes`
 --
 ALTER TABLE `notes`
-  MODIFY `note_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `note_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -197,8 +228,8 @@ ALTER TABLE `notes`
 -- Constraints for table `note_labels`
 --
 ALTER TABLE `note_labels`
-  ADD CONSTRAINT `note_labels_ibfk_1` FOREIGN KEY (`note_id`) REFERENCES `notes` (`note_id`),
-  ADD CONSTRAINT `note_labels_ibfk_2` FOREIGN KEY (`label_id`) REFERENCES `labels` (`label_id`);
+  ADD CONSTRAINT `fk_note_labels_name` FOREIGN KEY (`name`) REFERENCES `labels` (`name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `note_labels_ibfk_1` FOREIGN KEY (`note_id`) REFERENCES `notes` (`note_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

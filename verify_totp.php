@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION["user_id"] = $userId;
             unset($_SESSION["2fa_totp_user"]);
             unset($_SESSION["temp_username"]);
-            header("Location: homepage.php");
+            header("Location: unified_homepage.php");
             exit();
         } else {
             $error = "Invalid authentication code.";

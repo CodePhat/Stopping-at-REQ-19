@@ -10,7 +10,7 @@ define("ADMIN_PASSWORD", "password123");
 
 // If already logged in, redirect to homepage
 if (isset($_SESSION["logged_in"]) && $_SESSION["logged_in"] === true) {
-    header("Location: homepage.php");
+    header("Location: unified_homepage.php");
     exit();
 }
 
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $_SESSION["logged_in"] = true;
             $_SESSION["username"] = $username;
             handleRememberMe($username);
-            header("Location: homepage.php");
+            header("Location: unified_homepage.php");
             exit();
         }
 
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     $_SESSION["username"] = $username;
                     $_SESSION["user_id"] = $user['user_id'];
                     handleRememberMe($username);
-                    header("Location: homepage.php");
+                    header("Location: unified_homepage.php");
                     exit();
                 }
             } else {

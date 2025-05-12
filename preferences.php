@@ -70,7 +70,7 @@ $prefs = json_decode($stmt->fetchColumn(), true) ?? [];
   </div>
 
   <button class="btn btn-primary">Save Preferences</button>
-  <a href="homepage.php" class="btn btn-secondary">Back</a>
+  <a href="unified_homepage.php" class="btn btn-secondary">Back</a>
 </form>
 </body>
 </html>

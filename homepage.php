@@ -247,6 +247,7 @@ function togglePin(noteId) {
     });
 }
 
+let searchTimeout;
 $('#searchBox').on('input', function () {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(function () {
